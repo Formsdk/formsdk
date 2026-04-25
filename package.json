@@ -3,21 +3,15 @@
   "version": "1.0.0",
   "description": "Zero-lock-in, framework-agnostic Form SDK with pluggable adapters",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "bin": {
-    "formsdk": "./src/cli/cli.ts"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "types": "./src/index.ts"
-    },
-    "./adapters/*": "./src/adapters/*.ts",
-    "./cli": "./src/cli/cli.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
   },
   "files": [
-    "src",
     "dist"
   ],
   "keywords": [
@@ -36,7 +30,7 @@
   ],
   "scripts": {
     "test": "bun test",
-    "build": "bun build ./src/index.ts --outdir=dist --format=esm --target=bun --external @supabase/supabase-js --external @neondatabase/serverless --external ws --external @libsql/client --external @prisma/client --external drizzle-orm --external postgres --external enquirer --external better-auth",
+    "build": "bun build ./src/index.ts --outdir=dist --format=esm --target=node --external @supabase/supabase-js --external @neondatabase/serverless --external ws --external @libsql/client --external @prisma/client --external drizzle-orm --external postgres --external enquirer --external better-auth && tsc",
     "pub": "bun run build && npm publish --access public",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
@@ -61,7 +55,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "author": "",
+  "author": "arjunaditya",
   "license": "MIT",
   "repository": {
     "type": "git",

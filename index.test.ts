@@ -1,7 +1,25 @@
-import { test, expect } from "bun:test";
-import { createForm, handleRequest } from "./src/index";
+import { test, expect, beforeEach, afterEach } from "bun:test";
+import { createForm, handleRequest, setEnv, clearEnv } from "./src/index";
+import type { FormConfig } from "./src/types";
 
-test("createForm returns config", () => {
+let originalEnv: NodeJS.ProcessEnv;
+
+beforeEach(() => {
+  originalEnv = process.env;
+});
+
+afterEach(() => {
+  process.env = originalEnv;
+  clearEnv();
+});
+
+test("setEnv configures environment variables", () => {
+  setEnv({ TURNSTILE_SECRET: "test-secret" });
+  const form = createForm({ fields: {} });
+  expect(form).toBeDefined();
+});
+
+test("handleRequest validates fields", async () => {
   const form = createForm({
     fields: {
       email: (v) => typeof v === "string" && v.includes("@"),
@@ -48,4 +66,45 @@ test("handleRequest passes validation", async () => {
   });
 
   expect(result.success).toBe(true);
+});
+
+test("setEnv allows setting multiple env keys", () => {
+  setEnv({
+    TURNSTILE_SECRET: "secret1",
+  });
+  const form = createForm({ fields: {} });
+  expect(form).toBeDefined();
+});
+
+test("handleRequest with turnstile captcha fails without token", async () => {
+  setEnv({ TURNSTILE_SECRET: "test-secret" });
+  const form = createForm({
+    fields: { email: (v) => typeof v === "string" && v.includes("@") },
+    captcha: "turnstile",
+  });
+
+  const result = await handleRequest({
+    config: form,
+    body: { email: "test@example.com" },
+    ctx: {},
+  });
+
+  expect(result.success).toBe(false);
+  expect(result.errors).toBeDefined();
+  expect(result.errors![0].message).toContain("Captcha token required");
+});
+
+test("handleRequest with turnstile captcha throws when secret not set", async () => {
+  const form = createForm({
+    fields: { email: (v) => typeof v === "string" && v.includes("@") },
+    captcha: "turnstile",
+  });
+
+  await expect(
+    handleRequest({
+      config: form,
+      body: { email: "test@example.com" },
+      ctx: { headers: { "x-turnstile-token": "fake-token" } },
+    })
+  ).rejects.toThrow("TURNSTILE_SECRET not set");
 });

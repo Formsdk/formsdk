@@ -5,13 +5,69 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "bin": {
+    "formsdk": "./src/cli/cli.ts"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./adapters/*": "./src/adapters/*.ts",
+    "./cli": "./src/cli/cli.ts"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "keywords": [
+    "form",
+    "sdk",
+    "formsdk",
+    "validation",
+    "captcha",
+    "database",
+    "adapter",
+    "nextjs",
+    "svelte",
+    "astro",
+    "react",
+    "solidjs"
+  ],
   "scripts": {
     "test": "bun test",
-    "build": "bun build"
+    "build": "bun build ./src/index.ts --outdir=dist --format=esm --external @supabase/supabase-js --external @neondatabase/serverless --external ws --external @libsql/client --external @prisma/client --external drizzle-orm --external postgres",
+    "pub": "bun run build && npm publish --access public",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "@neondatabase/serverless": "^0.9.0",
+    "@libsql/client": "^0.6.0",
+    "ws": "^8.0.0",
+    "@prisma/client": "^5.0.0",
+    "drizzle-orm": "^0.30.0",
+    "postgres": "^3.4.0"
+  },
+  "dependencies": {
+    "enquirer": "^2.4.1"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5.0.0"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/formsdk"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/formsdk/issues"
+  },
+  "homepage": "https://github.com/your-username/formsdk#readme"
 }

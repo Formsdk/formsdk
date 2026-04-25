@@ -1,12 +1,7 @@
-import { registerDBAdapter, DBAdapter, FormContext } from "./db";
-
-type QueryFn = (
-  strings: TemplateStringsArray,
-  ...values: any[]
-) => Promise<any>;
+import type { DBAdapter, FormContext } from "./db.ts";
 
 interface PostgresAdapterOptions {
-  query: QueryFn;
+  connectionString: string;
   table?: string;
 }
 
@@ -17,6 +12,9 @@ function createPostgresAdapter(options: PostgresAdapterOptions): DBAdapter {
       data: Record<string, any>,
       _ctx: FormContext
     ): Promise<void> {
+      const postgres = (await import("postgres")).default;
+      const sql = postgres(options.connectionString);
+
       const table = options.table || "form_submissions";
       const columns = Object.keys(data);
       const values = Object.values(data);
@@ -25,7 +23,8 @@ function createPostgresAdapter(options: PostgresAdapterOptions): DBAdapter {
 
       const query = `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders})`;
 
-      await options.query`${query}`.using(values);
+      await sql`${sql.unsafe(query)}`.using(values);
+      await sql.end();
     },
   };
 }

@@ -1,7 +1,5 @@
-import { FormConfig, FormContext, FieldError, FormResult } from "./types";
-import { getDBAdapter } from "./adapters/db";
-import { getCaptchaAdapter } from "./adapters/captcha";
-import { createTurnstileAdapter } from "./adapters/turnstile";
+import { FormConfig, FormContext, FieldError, FormResult } from "./types.ts";
+import { getDBAdapter } from "./adapters/db.ts";
 
 interface EnvConfig {
   TURNSTILE_SECRET?: string;
@@ -11,6 +9,14 @@ let envConfig: EnvConfig = {};
 
 export function setEnv(config: EnvConfig): void {
   envConfig = config;
+}
+
+export function clearEnv(): void {
+  envConfig = {};
+}
+
+export function getEnv(key: keyof EnvConfig): string | undefined {
+  return envConfig[key] || process.env[key];
 }
 
 interface HandleRequestOptions {
@@ -41,11 +47,12 @@ export async function handleRequest(
       return { success: false, errors: [{ field: "captcha", message: "Captcha token required" }] };
     }
 
-    const secretKey = envConfig.TURNSTILE_SECRET || process.env.TURNSTILE_SECRET;
+    const secretKey = getEnv("TURNSTILE_SECRET");
     if (!secretKey) {
       throw new Error("TURNSTILE_SECRET not set");
     }
 
+    const { createTurnstileAdapter } = await import("./adapters/turnstile.ts");
     const adapter = createTurnstileAdapter({ secretKey });
     const valid = await adapter.verify(token, ctx.ip);
     if (!valid) {
@@ -71,3 +78,5 @@ export async function handleRequest(
 export function createForm(config: FormConfig): FormConfig {
   return config;
 }
+
+export type { EnvConfig };

@@ -1,4 +1,4 @@
-export { handleRequest, createForm } from "./core";
-export type { FormConfig, FormContext, FieldError, FormResult } from "./types";
+export { handleRequest, createForm, setEnv, clearEnv, getEnv } from "./core.ts";
+export type { FormConfig, FormContext, FieldError, FormResult, EnvConfig } from "./core.ts";
 
-export * from "./adapters";
+export * from "./adapters/index.ts";

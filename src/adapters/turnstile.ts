@@ -1,4 +1,4 @@
-import { registerCaptchaAdapter, CaptchaAdapter } from "./captcha";
+import type { CaptchaAdapter } from "./captcha.ts";
 
 interface TurnstileAdapterOptions {
   secretKey: string;

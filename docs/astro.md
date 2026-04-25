@@ -1,18 +1,18 @@
-# Astro + formsdk
+# Astro + @formsdk/sdk
 
 ## Install
 
 ```bash
-bun add formsdk
+bun add @formsdk/sdk
 ```
 
 ## CLI
 
-formsdk provides an interactive CLI to generate forms:
+@formsdk/sdk provides an interactive CLI to generate forms:
 
 ```bash
-bun x formsdk generate           # Interactive mode
-bun x formsdk generate contact   # With options
+bun x @formsdk/sdk generate           # Interactive mode
+bun x @formsdk/sdk generate contact   # With options
 ```
 
 ### CLI Options
@@ -28,19 +28,19 @@ bun x formsdk generate contact   # With options
 ### Examples
 
 ```bash
-bun x formsdk generate contact --framework astro --ui shadcn --orm supabase
-bun x formsdk generate contact --framework astro --orm neon --captcha
+bun x @formsdk/sdk generate contact --framework astro --ui shadcn --orm supabase
+bun x @formsdk/sdk generate contact --framework astro --orm neon --captcha
 ```
 
 ## Setup
 
 ### Database Adapters
 
-formsdk supports multiple database adapters for persisting form submissions.
+@formsdk/sdk supports multiple database adapters for persisting form submissions.
 
 **Prisma ORM:**
 ```ts
-import { createPrismaAdapter } from "formsdk/adapters/orm/prisma";
+import { createPrismaAdapter } from "@formsdk/sdk/adapters/orm/prisma";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -52,7 +52,7 @@ registerDBAdapter("prisma", createPrismaAdapter({
 
 **Drizzle ORM:**
 ```ts
-import { createDrizzleAdapter } from "formsdk/adapters/orm/drizzle";
+import { createDrizzleAdapter } from "@formsdk/sdk/adapters/orm/drizzle";
 import { drizzle } from "drizzle-orm/postgres-js";
 
 const db = drizzle(import.meta.env.DATABASE_URL!);
@@ -61,7 +61,7 @@ registerDBAdapter("drizzle", createDrizzleAdapter({ db, table: formSubmissions }
 
 **Supabase:**
 ```ts
-import { createSupabaseAdapter } from "formsdk/adapters/supabase";
+import { createSupabaseAdapter } from "@formsdk/sdk/adapters/supabase";
 
 registerDBAdapter("supabase", createSupabaseAdapter({
   url: import.meta.env.PUBLIC_SUPABASE_URL!,
@@ -71,7 +71,7 @@ registerDBAdapter("supabase", createSupabaseAdapter({
 
 **Neon (Serverless Postgres):**
 ```ts
-import { createNeonAdapter } from "formsdk/adapters/neon";
+import { createNeonAdapter } from "@formsdk/sdk/adapters/neon";
 
 registerDBAdapter("neon", createNeonAdapter({
   connectionString: import.meta.env.DATABASE_URL!
@@ -80,7 +80,7 @@ registerDBAdapter("neon", createNeonAdapter({
 
 **Turso (libSQL):**
 ```ts
-import { createTursoAdapter } from "formsdk/adapters/turso";
+import { createTursoAdapter } from "@formsdk/sdk/adapters/turso";
 
 registerDBAdapter("turso", createTursoAdapter({
   url: import.meta.env.TURSO_DATABASE_URL!,
@@ -90,7 +90,7 @@ registerDBAdapter("turso", createTursoAdapter({
 
 **Generic PostgreSQL:**
 ```ts
-import { createPostgresAdapter } from "formsdk/adapters/postgres";
+import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
 
 registerDBAdapter("postgres", createPostgresAdapter({
   connectionString: import.meta.env.DATABASE_URL!
@@ -118,7 +118,7 @@ TURSO_DATABASE_URL=libsql://your-db.turso.io?authToken=your-token
 
 ```ts
 // src/lib/forms.ts
-import { createForm } from "formsdk";
+import { createForm } from "@formsdk/sdk";
 
 export const contactForm = createForm({
   fields: {
@@ -138,7 +138,7 @@ export const contactForm = createForm({
 ```ts
 // src/pages/api/contact.ts
 import { contactForm } from "$lib/forms";
-import { handleRequest } from "formsdk";
+import { handleRequest } from "@formsdk/sdk";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request }) => {
@@ -172,10 +172,10 @@ TURSO_AUTH_TOKEN=your-auth-token
 
 ### Setting Environment Variables
 
-In your formsdk config file (`src/lib/formsdk.ts`):
+In your @formsdk/sdk config file (`src/lib/formsdk.ts`):
 
 ```ts
-import { createForm, handleRequest, setEnv } from "formsdk";
+import { createForm, handleRequest, setEnv } from "@formsdk/sdk";
 
 setEnv({
   TURNSTILE_SECRET: import.meta.env.TURNSTILE_SECRET
@@ -235,7 +235,7 @@ setEnv({
 ```ts
 // src/actions.ts
 import { contactForm } from "$lib/forms";
-import { handleRequest } from "formsdk";
+import { handleRequest } from "@formsdk/sdk";
 
 export const contactAction = async ({ request }: { request: Request }) => {
   const data = await request.formData();

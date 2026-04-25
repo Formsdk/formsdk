@@ -1,18 +1,18 @@
-# SvelteKit + formsdk
+# SvelteKit + @formsdk/sdk
 
 ## Install
 
 ```bash
-bun add formsdk
+bun add @formsdk/sdk
 ```
 
 ## CLI
 
-formsdk provides an interactive CLI to generate forms:
+@formsdk/sdk provides an interactive CLI to generate forms:
 
 ```bash
-bun x formsdk generate           # Interactive mode (uses Enquirer)
-bun x formsdk generate contact   # With options
+bun x @formsdk/sdk generate           # Interactive mode (uses Enquirer)
+bun x @formsdk/sdk generate contact   # With options
 ```
 
 ### CLI Options
@@ -28,19 +28,19 @@ bun x formsdk generate contact   # With options
 ### Examples
 
 ```bash
-bun x formsdk generate contact --framework svelte --ui shadcn --orm supabase
-bun x formsdk generate contact --framework svelte --orm neon --captcha
+bun x @formsdk/sdk generate contact --framework svelte --ui shadcn --orm supabase
+bun x @formsdk/sdk generate contact --framework svelte --orm neon --captcha
 ```
 
 ## Setup
 
 ### Database Adapters
 
-formsdk supports multiple database adapters for persisting form submissions.
+@formsdk/sdk supports multiple database adapters for persisting form submissions.
 
 **Prisma ORM:**
 ```ts
-import { createPrismaAdapter } from "formsdk/adapters/orm/prisma";
+import { createPrismaAdapter } from "@formsdk/sdk/adapters/orm/prisma";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -52,7 +52,7 @@ registerDBAdapter("prisma", createPrismaAdapter({
 
 **Drizzle ORM:**
 ```ts
-import { createDrizzleAdapter } from "formsdk/adapters/orm/drizzle";
+import { createDrizzleAdapter } from "@formsdk/sdk/adapters/orm/drizzle";
 import { drizzle } from "drizzle-orm/postgres-js";
 
 const db = drizzle(process.env.DATABASE_URL!);
@@ -61,7 +61,7 @@ registerDBAdapter("drizzle", createDrizzleAdapter({ db, table: formSubmissions }
 
 **Supabase:**
 ```ts
-import { createSupabaseAdapter } from "formsdk/adapters/supabase";
+import { createSupabaseAdapter } from "@formsdk/sdk/adapters/supabase";
 
 registerDBAdapter("supabase", createSupabaseAdapter({
   url: process.env.PUBLIC_SUPABASE_URL!,
@@ -71,7 +71,7 @@ registerDBAdapter("supabase", createSupabaseAdapter({
 
 **Neon (Serverless Postgres):**
 ```ts
-import { createNeonAdapter } from "formsdk/adapters/neon";
+import { createNeonAdapter } from "@formsdk/sdk/adapters/neon";
 
 registerDBAdapter("neon", createNeonAdapter({
   connectionString: process.env.DATABASE_URL!
@@ -80,7 +80,7 @@ registerDBAdapter("neon", createNeonAdapter({
 
 **Turso (libSQL):**
 ```ts
-import { createTursoAdapter } from "formsdk/adapters/turso";
+import { createTursoAdapter } from "@formsdk/sdk/adapters/turso";
 
 registerDBAdapter("turso", createTursoAdapter({
   url: process.env.TURSO_DATABASE_URL!,
@@ -90,7 +90,7 @@ registerDBAdapter("turso", createTursoAdapter({
 
 **Generic PostgreSQL:**
 ```ts
-import { createPostgresAdapter } from "formsdk/adapters/postgres";
+import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
 
 registerDBAdapter("postgres", createPostgresAdapter({
   connectionString: process.env.DATABASE_URL!
@@ -118,7 +118,7 @@ TURSO_DATABASE_URL=libsql://your-db.turso.io?authToken=your-token
 
 ```ts
 // src/lib/forms.ts
-import { createForm } from "formsdk";
+import { createForm } from "@formsdk/sdk";
 
 export const contactForm = createForm({
   fields: {
@@ -139,7 +139,7 @@ export const contactForm = createForm({
 // src/routes/api/contact/+server.ts
 import { json } from "@sveltejs/kit";
 import { contactForm } from "$lib/forms";
-import { handleRequest } from "formsdk";
+import { handleRequest } from "@formsdk/sdk";
 
 export async function POST({ request }) {
   const body = await request.json();
@@ -159,7 +159,7 @@ export async function POST({ request }) {
 ```ts
 // src/routes/+page.server.ts
 import { contactForm } from "$lib/forms";
-import { handleRequest } from "formsdk";
+import { handleRequest } from "@formsdk/sdk";
 
 export const actions = {
   default: async ({ request }) => {
@@ -278,10 +278,10 @@ TURSO_AUTH_TOKEN=your-auth-token
 
 ### Setting Environment Variables
 
-In your formsdk config file (`src/lib/formsdk.ts`):
+In your @formsdk/sdk config file (`src/lib/formsdk.ts`):
 
 ```ts
-import { createForm, handleRequest, setEnv, registerDBAdapter } from "formsdk";
+import { createForm, handleRequest, setEnv, registerDBAdapter } from "@formsdk/sdk";
 
 setEnv({
   TURNSTILE_SECRET: process.env.TURNSTILE_SECRET
@@ -314,7 +314,7 @@ export function validateField(validator: (v: any) => boolean, value: any): strin
 ```ts
 // src/routes/contact/+page.server.ts
 import { contactForm } from "$lib/forms";
-import { handleRequest } from "formsdk";
+import { handleRequest } from "@formsdk/sdk";
 import { fail } from "@sveltejs/kit";
 
 export const actions = {
@@ -358,11 +358,11 @@ export const actions = {
 
 ## Better Auth (Authentication)
 
-formsdk supports Better Auth for authentication. Generate auth forms with the CLI:
+@formsdk/sdk supports Better Auth for authentication. Generate auth forms with the CLI:
 
 ```bash
-bun x formsdk generate signin --framework svelte --type signin --orm prisma
-bun x formsdk generate signup --framework svelte --type signup --orm drizzle
+bun x @formsdk/sdk generate signin --framework svelte --type signin --orm prisma
+bun x @formsdk/sdk generate signup --framework svelte --type signup --orm drizzle
 ```
 
 ### Better Auth Setup

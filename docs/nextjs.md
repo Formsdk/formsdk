@@ -1,18 +1,18 @@
-# Next.js + formsdk
+# Next.js + @formsdk/sdk
 
 ## Install
 
 ```bash
-bun add formsdk
+bun add @formsdk/sdk
 ```
 
 ## CLI
 
-formsdk provides an interactive CLI to generate forms:
+@formsdk/sdk provides an interactive CLI to generate forms:
 
 ```bash
-bun x formsdk generate           # Interactive mode (arrow keys + space)
-bun x formsdk generate contact   # With options
+bun x @formsdk/sdk generate           # Interactive mode (arrow keys + space)
+bun x @formsdk/sdk generate contact   # With options
 ```
 
 ### CLI Options
@@ -28,19 +28,19 @@ bun x formsdk generate contact   # With options
 ### Examples
 
 ```bash
-bun x formsdk generate contact --framework nextjs --ui shadcn --orm prisma --captcha
-bun x formsdk generate contact --framework svelte --ui shadcn --orm supabase
-bun x formsdk generate contact              # Interactive mode
+bun x @formsdk/sdk generate contact --framework nextjs --ui shadcn --orm prisma --captcha
+bun x @formsdk/sdk generate contact --framework svelte --ui shadcn --orm supabase
+bun x @formsdk/sdk generate contact              # Interactive mode
 ```
 
 ## Database Adapters
 
-formsdk supports multiple database adapters for persisting form submissions.
+@formsdk/sdk supports multiple database adapters for persisting form submissions.
 
 ### Prisma ORM
 
 ```ts
-import { createPrismaAdapter } from "formsdk/adapters/orm/prisma";
+import { createPrismaAdapter } from "@formsdk/sdk/adapters/orm/prisma";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -54,7 +54,7 @@ registerDBAdapter("prisma", createPrismaAdapter({
 ### Drizzle ORM
 
 ```ts
-import { createDrizzleAdapter } from "formsdk/adapters/orm/drizzle";
+import { createDrizzleAdapter } from "@formsdk/sdk/adapters/orm/drizzle";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { formSubmissions } from "./schema";
 
@@ -69,7 +69,7 @@ registerDBAdapter("drizzle", createDrizzleAdapter({
 ### Supabase
 
 ```ts
-import { createSupabaseAdapter } from "formsdk/adapters/supabase";
+import { createSupabaseAdapter } from "@formsdk/sdk/adapters/supabase";
 
 registerDBAdapter("supabase", createSupabaseAdapter({
   url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,7 +81,7 @@ registerDBAdapter("supabase", createSupabaseAdapter({
 ### Neon (PostgreSQL Serverless)
 
 ```ts
-import { createNeonAdapter } from "formsdk/adapters/neon";
+import { createNeonAdapter } from "@formsdk/sdk/adapters/neon";
 
 registerDBAdapter("neon", createNeonAdapter({
   connectionString: process.env.DATABASE_URL!,
@@ -92,7 +92,7 @@ registerDBAdapter("neon", createNeonAdapter({
 ### Turso (libSQL)
 
 ```ts
-import { createTursoAdapter } from "formsdk/adapters/turso";
+import { createTursoAdapter } from "@formsdk/sdk/adapters/turso";
 
 registerDBAdapter("turso", createTursoAdapter({
   url: process.env.TURSO_DATABASE_URL!,
@@ -104,7 +104,7 @@ registerDBAdapter("turso", createTursoAdapter({
 ### Generic PostgreSQL (Any remote Postgres)
 
 ```ts
-import { createPostgresAdapter } from "formsdk/adapters/postgres";
+import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
 
 registerDBAdapter("postgres", createPostgresAdapter({
   connectionString: process.env.DATABASE_URL!,
@@ -192,10 +192,10 @@ TURSO_AUTH_TOKEN=your-auth-token
 
 ### Setting Environment Variables
 
-In your formsdk config file (`lib/formsdk.ts`), you can set the environment variables using `setEnv()`:
+In your @formsdk/sdk config file (`lib/formsdk.ts`), you can set the environment variables using `setEnv()`:
 
 ```ts
-import { createForm, handleRequest, setEnv } from "formsdk";
+import { createForm, handleRequest, setEnv } from "@formsdk/sdk";
 
 setEnv({
   TURNSTILE_SECRET: process.env.TURNSTILE_SECRET

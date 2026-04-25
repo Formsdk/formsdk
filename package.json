@@ -1,6 +1,6 @@
 {
-  "name": "formsdk",
-  "version": "1.0.0",
+  "name": "@formsdk/sdk",
+  "version": "1.0.1",
   "description": "Zero-lock-in, framework-agnostic Form SDK with pluggable adapters",
   "type": "module",
   "main": "./dist/index.js",
@@ -59,10 +59,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/formsdk"
+    "url": "https://github.com/formsdk/formsdk"
   },
   "bugs": {
-    "url": "https://github.com/your-username/formsdk/issues"
+    "url": "https://github.com/formsdk/formsdk/issues"
   },
-  "homepage": "https://github.com/your-username/formsdk#readme"
+  "homepage": "https://github.com/formsdk/formsdk#readme"
 }

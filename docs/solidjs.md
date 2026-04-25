@@ -1,18 +1,18 @@
-# SolidJS + formsdk
+# SolidJS + @formsdk/sdk
 
 ## Install
 
 ```bash
-bun add formsdk
+bun add @formsdk/sdk
 ```
 
 ## CLI
 
-formsdk provides an interactive CLI to generate forms:
+@formsdk/sdk provides an interactive CLI to generate forms:
 
 ```bash
-bun x formsdk generate           # Interactive mode (uses Enquirer)
-bun x formsdk generate contact   # With options
+bun x @formsdk/sdk generate           # Interactive mode (uses Enquirer)
+bun x @formsdk/sdk generate contact   # With options
 ```
 
 ### CLI Options
@@ -28,20 +28,20 @@ bun x formsdk generate contact   # With options
 ### Examples
 
 ```bash
-bun x formsdk generate contact --framework solidjs --orm supabase
-bun x formsdk generate contact --framework solidjs --orm neon --captcha
+bun x @formsdk/sdk generate contact --framework solidjs --orm supabase
+bun x @formsdk/sdk generate contact --framework solidjs --orm neon --captcha
 ```
 
 ## Setup
 
 ### TanStack Start (Recommended)
 
-formsdk works with TanStack Start for file-based routing:
+@formsdk/sdk works with TanStack Start for file-based routing:
 
 ```ts
 // app/lib/formsdk.ts
-import { createForm, handleRequest, setEnv, registerDBAdapter } from "formsdk";
-import { createPostgresAdapter } from "formsdk/adapters/postgres";
+import { createForm, handleRequest, setEnv, registerDBAdapter } from "@formsdk/sdk";
+import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
 
 setEnv({
   TURNSTILE_SECRET: import.meta.env.VITE_TURNSTILE_SECRET
@@ -58,7 +58,7 @@ export { createForm, handleRequest };
 
 **Prisma ORM:**
 ```ts
-import { createPrismaAdapter } from "formsdk/adapters/orm/prisma";
+import { createPrismaAdapter } from "@formsdk/sdk/adapters/orm/prisma";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -70,7 +70,7 @@ registerDBAdapter("prisma", createPrismaAdapter({
 
 **Drizzle ORM:**
 ```ts
-import { createDrizzleAdapter } from "formsdk/adapters/orm/drizzle";
+import { createDrizzleAdapter } from "@formsdk/sdk/adapters/orm/drizzle";
 import { drizzle } from "drizzle-orm/postgres-js";
 
 const db = drizzle(import.meta.env.VITE_DATABASE_URL!);
@@ -79,7 +79,7 @@ registerDBAdapter("drizzle", createDrizzleAdapter({ db, table: formSubmissions }
 
 **Supabase:**
 ```ts
-import { createSupabaseAdapter } from "formsdk/adapters/supabase";
+import { createSupabaseAdapter } from "@formsdk/sdk/adapters/supabase";
 
 registerDBAdapter("supabase", createSupabaseAdapter({
   url: import.meta.env.VITE_SUPABASE_URL!,
@@ -89,7 +89,7 @@ registerDBAdapter("supabase", createSupabaseAdapter({
 
 **Neon (Serverless Postgres):**
 ```ts
-import { createNeonAdapter } from "formsdk/adapters/neon";
+import { createNeonAdapter } from "@formsdk/sdk/adapters/neon";
 
 registerDBAdapter("neon", createNeonAdapter({
   connectionString: import.meta.env.VITE_DATABASE_URL!
@@ -98,7 +98,7 @@ registerDBAdapter("neon", createNeonAdapter({
 
 **Turso (libSQL):**
 ```ts
-import { createTursoAdapter } from "formsdk/adapters/turso";
+import { createTursoAdapter } from "@formsdk/sdk/adapters/turso";
 
 registerDBAdapter("turso", createTursoAdapter({
   url: import.meta.env.VITE_TURSO_DATABASE_URL!,
@@ -108,7 +108,7 @@ registerDBAdapter("turso", createTursoAdapter({
 
 **Generic PostgreSQL:**
 ```ts
-import { createPostgresAdapter } from "formsdk/adapters/postgres";
+import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
 
 registerDBAdapter("postgres", createPostgresAdapter({
   connectionString: import.meta.env.VITE_DATABASE_URL!
@@ -136,7 +136,7 @@ VITE_TURSO_DATABASE_URL=libsql://your-db.turso.io?authToken=your-token
 
 ```ts
 // app/lib/forms.ts
-import { createForm } from "formsdk";
+import { createForm } from "@formsdk/sdk";
 
 export const contactForm = createForm({
   fields: {
@@ -285,10 +285,10 @@ VITE_TURSO_AUTH_TOKEN=your-auth-token
 
 ### Setting Environment Variables
 
-In your formsdk config file (`app/lib/formsdk.ts`):
+In your @formsdk/sdk config file (`app/lib/formsdk.ts`):
 
 ```ts
-import { createForm, handleRequest, setEnv } from "formsdk";
+import { createForm, handleRequest, setEnv } from "@formsdk/sdk";
 
 setEnv({
   TURNSTILE_SECRET: import.meta.env.VITE_TURNSTILE_SECRET

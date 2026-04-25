@@ -1,1 +1,1 @@
-# formsdk
+# @formsdk/sdk

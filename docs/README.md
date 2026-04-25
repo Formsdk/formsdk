@@ -1,4 +1,4 @@
-# formsdk
+# @formsdk/sdk
 
 Zero-lock-in, framework-agnostic Form SDK.
 
@@ -6,8 +6,8 @@ Zero-lock-in, framework-agnostic Form SDK.
 
 ```ts
 // lib/formsdk.ts
-import { createForm, handleRequest, setEnv, registerDBAdapter } from "formsdk";
-import { createPostgresAdapter } from "formsdk/adapters/postgres";
+import { createForm, handleRequest, setEnv, registerDBAdapter } from "@formsdk/sdk";
+import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
 
 setEnv({
   TURNSTILE_SECRET: process.env.TURNSTILE_SECRET

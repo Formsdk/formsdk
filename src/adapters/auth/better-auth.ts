@@ -1,8 +1,3 @@
-import { betterAuth } from "better-auth";
-import type { BetterAuthOptions, Auth } from "better-auth";
-
-export type { Auth };
-
 export interface BetterAuthAdapterOptions {
   database: {
     provider: "prisma" | "drizzle" | "postgres" | "sqlite" | "mysql" | "mongo" | "mssql";
@@ -20,7 +15,8 @@ export interface BetterAuthAdapterOptions {
   plugins?: any[];
 }
 
-export function createBetterAuthAdapter(options: BetterAuthAdapterOptions): Auth {
+export async function createBetterAuthAdapter(options: BetterAuthAdapterOptions): Promise<any> {
+  const { betterAuth } = await import("better-auth");
   return betterAuth({
     database: options.database,
     emailAndPassword: options.emailAndPassword?.enabled !== false
@@ -35,7 +31,7 @@ export function createBetterAuthAdapter(options: BetterAuthAdapterOptions): Auth
       : undefined,
     ...(options.socialProviders && { socialProviders: options.socialProviders }),
     ...(options.plugins?.length && { plugins: options.plugins }),
-  } as BetterAuthOptions);
+  });
 }
 
 export const authClient = {

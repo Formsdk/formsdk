@@ -1,6 +1,6 @@
 {
   "name": "@formsdk/sdk",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Zero-lock-in, framework-agnostic Form SDK with pluggable adapters",
   "type": "module",
   "main": "./dist/index.js",
@@ -30,27 +30,15 @@
   ],
   "scripts": {
     "test": "bun test",
-    "build": "bun build ./src/index.ts --outdir=dist --format=esm --target=node --external react --external react-dom --external enquirer --external @supabase/supabase-js --external @neondatabase/serverless --external ws --external @libsql/client --external @prisma/client --external drizzle-orm --external postgres --external better-auth --external node:module --external node:fs --external node:fs/promises --external node:os --external node:crypto --external node:net --external node:tls --external node:perf_hooks --external node:path --external node:url --external postgres && tsc -p tsconfig.build.json",
+    "build": "bun build ./src/index.ts --outdir=dist --format=esm --target=node --packages=external && tsc -p tsconfig.build.json",
     "pub": "bun run build && npm publish --access public",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
   },
-  "peerDependencies": {
-    "@supabase/supabase-js": "*",
-    "@neondatabase/serverless": "*",
-    "@libsql/client": "*",
-    "ws": "*",
-    "@prisma/client": "*",
-    "drizzle-orm": "*",
-    "postgres": "*",
-    "better-auth": "*"
-  },
-  "dependencies": {
-    "enquirer": "^2.4.1"
-  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^18.2.0",
+    "enquirer": "^2.4.1",
     "typescript": "^5.0.0"
   },
   "engines": {

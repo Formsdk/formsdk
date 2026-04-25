@@ -28,7 +28,7 @@ function createTursoAdapter(options: TursoAdapterOptions): DBAdapter {
         authToken: options.authToken,
       });
 
-      await client.execute(query, values);
+      await client.execute({ sql: query, args: values });
       await client.close();
     },
   };

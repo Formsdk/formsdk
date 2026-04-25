@@ -12,10 +12,7 @@ function createDrizzleAdapter(options: DrizzleAdapterOptions): DBAdapter {
       data: Record<string, any>,
       _ctx: FormContext
     ): Promise<void> {
-      const { insert } = await import("drizzle-orm");
-      const tableName = options.table;
-
-      await options.db.insert(tableName).values(data);
+      await options.db.insert(options.table).values(data);
     },
   };
 }

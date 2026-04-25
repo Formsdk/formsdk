@@ -22,7 +22,7 @@ function createTurnstileAdapter(options: TurnstileAdapterOptions): CaptchaAdapte
         }
       );
 
-      const data = await result.json();
+      const data = await result.json() as any;
       return data.success === true;
     },
   };

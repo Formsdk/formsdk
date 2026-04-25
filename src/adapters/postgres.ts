@@ -23,7 +23,7 @@ function createPostgresAdapter(options: PostgresAdapterOptions): DBAdapter {
 
       const query = `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders})`;
 
-      await sql`${sql.unsafe(query)}`.using(values);
+      await sql.unsafe(query, values);
       await sql.end();
     },
   };

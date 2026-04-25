@@ -58,7 +58,7 @@ export const authClient = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(params),
-        }).then((r) => r.json());
+        }).then((r) => r.json() as Promise<any>);
 
         if (result.error && handlers?.onError) {
           handlers.onError({ error: result.error });
@@ -92,7 +92,7 @@ export const authClient = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(params),
-        }).then((r) => r.json());
+        }).then((r) => r.json() as Promise<any>);
 
         if (result.error && handlers?.onError) {
           handlers.onError({ error: result.error });
@@ -115,7 +115,7 @@ export const authClient = {
       try {
         const result = await fetch("/api/auth/sign-out", {
           method: "POST",
-        }).then((r) => r.json());
+        }).then((r) => r.json() as Promise<any>);
 
         if (result.error && handlers?.onError) {
           handlers.onError({ error: result.error });

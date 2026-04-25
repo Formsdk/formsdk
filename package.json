@@ -9,6 +9,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react.js",
+      "types": "./dist/react.d.ts"
     }
   },
   "files": [
@@ -30,7 +34,7 @@
   ],
   "scripts": {
     "test": "bun test",
-    "build": "bun build ./src/index.ts --outdir=dist --format=esm --target=node --packages=external && tsc -p tsconfig.build.json",
+    "build": "bun build ./src/index.ts ./src/react.ts --outdir=dist --format=esm --target=node --packages=external && tsc -p tsconfig.build.json",
     "pub": "bun run build && npm publish --access public",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"

@@ -341,7 +341,7 @@ export const actions = {
 <!-- src/routes/contact/+page.svelte -->
 <script lang="ts">
   import { enhance } from "$app/forms";
-  
+
   export let form;
 </script>
 
@@ -354,4 +354,160 @@ export const actions = {
   <textarea name="message" required placeholder="Message"></textarea>
   <button type="submit">Send</button>
 </form>
+```
+
+## Better Auth (Authentication)
+
+formsdk supports Better Auth for authentication. Generate auth forms with the CLI:
+
+```bash
+bun x formsdk generate signin --framework svelte --type signin --orm prisma
+bun x formsdk generate signup --framework svelte --type signup --orm drizzle
+```
+
+### Better Auth Setup
+
+**Prisma:**
+```ts
+// src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { PrismaClient } from "@prisma/client";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+
+const prisma = new PrismaClient();
+
+export const auth = betterAuth({
+  database: prismaAdapter(prisma),
+  emailAndPassword: {
+    enabled: true,
+    autoSignIn: false,
+    minPasswordLength: 8,
+  },
+});
+```
+
+**Drizzle:**
+```ts
+// src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { postgresAdapter } from "better-auth/adapters/drizzle";
+import { db } from "./db"; // your drizzle instance
+
+export const auth = betterAuth({
+  database: postgresAdapter(db),
+  emailAndPassword: {
+    enabled: true,
+    autoSignIn: false,
+    minPasswordLength: 8,
+  },
+});
+```
+
+### Auth API Routes
+
+```ts
+// src/routes/api/auth/[...path]/+server.ts
+import { auth } from "$lib/auth";
+
+export const { signIn, signOut, signUp, session } = auth.api;
+
+export function GET(req: Request) {
+  return auth.api.sessionHandler(req);
+}
+
+export function POST(req: Request) {
+  const url = new URL(req.url);
+  const path = url.pathname.split("/api/auth/")[1];
+
+  if (path === "sign-in/email") {
+    return auth.api.signInEmail(req as any);
+  }
+  if (path === "sign-up/email") {
+    return auth.api.signUpEmail(req as any);
+  }
+  if (path === "sign-out") {
+    return auth.api.signOut(req as any);
+  }
+
+  return new Response("Not found", { status: 404 });
+}
+```
+
+### Sign In Component
+
+```svelte
+<!-- src/lib/components/SignInForm.svelte -->
+<script lang="ts">
+  let loading = false;
+
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    loading = true;
+
+    const form = e.target as HTMLFormElement;
+    const data = new FormData(form);
+
+    try {
+      const res = await fetch("/api/auth/sign-in/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(data)),
+      });
+      const result = await res.json();
+
+      if (result.data) {
+        window.location.href = "/dashboard";
+      } else if (result.error) {
+        alert(result.error.message);
+      }
+    } finally {
+      loading = false;
+    }
+  }
+</script>
+
+<form on:submit|preventDefault={handleSubmit} class="max-w-md" style="display: flex; flex-direction: column; gap: 1rem;">
+  <input type="email" name="email" required placeholder="Email" />
+  <input type="password" name="password" required placeholder="Password" />
+  <button type="submit" disabled={loading}>
+    {loading ? "Signing in..." : "Sign In"}
+  </button>
+  <p style="text-align: center;">
+    Don't have an account? <a href="/sign-up">Sign up</a>
+  </p>
+</form>
+```
+
+### Sign Out Button
+
+```svelte
+<!-- src/lib/components/SignOutButton.svelte -->
+<script lang="ts">
+  async function handleSignOut() {
+    await fetch("/api/auth/sign-out", { method: "POST" });
+    window.location.href = "/sign-in";
+  }
+</script>
+
+<button on:click={handleSignOut} class="px-4 py-2 bg-red-600 text-white rounded">
+  Sign Out
+</button>
+```
+
+### Get Current Session
+
+```ts
+// src/routes/+page.server.ts
+import { auth } from "$lib/auth";
+
+export async function load({ request }) {
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+
+  return {
+    session: session?.user ?? null,
+  };
+}
 ```

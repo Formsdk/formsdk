@@ -1,14 +1,14 @@
 {
   "name": "@formsdk/sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Zero-lock-in, framework-agnostic Form SDK with pluggable adapters",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [

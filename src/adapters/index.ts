@@ -13,3 +13,6 @@ export { createTursoAdapter } from "./turso.ts";
 
 export { createPrismaAdapter } from "./orm/prisma.ts";
 export { createDrizzleAdapter } from "./orm/drizzle.ts";
+
+export { createBetterAuthAdapter, authClient } from "./auth/better-auth.ts";
+export type { BetterAuthAdapterOptions } from "./auth/better-auth.ts";

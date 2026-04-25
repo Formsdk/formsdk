@@ -24,4 +24,4 @@ jobs:
         run: bun test
 
       - name: Build
-        run: bun build ./src/index.ts --outdir=dist --format=esm --target=bun --external @supabase/supabase-js --external @neondatabase/serverless --external ws --external @libsql/client --external @prisma/client --external drizzle-orm --external postgres --external enquirer
+        run: bun build ./src/index.ts --outdir=dist --format=esm --target=bun --external @supabase/supabase-js --external @neondatabase/serverless --external ws --external @libsql/client --external @prisma/client --external drizzle-orm --external postgres --external enquirer --external better-auth

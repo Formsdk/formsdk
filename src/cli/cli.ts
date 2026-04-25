@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
-import { Select, Input, Confirm } from "enquirer";
+import enquirer from "enquirer";
+const { Select, Input, Confirm } = enquirer;
 import { generateCommand } from "./commands/generate.ts";
 import { initCommand } from "./commands/init.ts";
 import { listCommand } from "./commands/list.ts";
@@ -57,6 +58,16 @@ const FRAMEWORKS = [
   { name: "solidjs", message: "SolidJS + TanStack Start" },
 ];
 
+const FORM_TYPES = [
+  { name: "contact", message: "Contact Form (email, message)" },
+  { name: "signup", message: "Signup (name, email, password)" },
+  { name: "signin", message: "Sign In (email, password) - Better Auth" },
+  { name: "signout", message: "Sign Out - Better Auth" },
+  { name: "application", message: "Job Application (full form)" },
+  { name: "newsletter", message: "Newsletter (with checkbox)" },
+  { name: "survey", message: "Survey (with rating)" },
+];
+
 const UI_LIBRARIES = [
   { name: "shadcn", message: "Shadcn/ui components" },
   { name: "chakra", message: "Chakra UI (React only)" },
@@ -88,6 +99,22 @@ async function runInteractive(): Promise<Record<string, any>> {
   });
   const name = await namePrompt.run();
 
+  const typePrompt = new Select({
+    name: "type",
+    message: `${FG.info}select form type${FG.reset}:`,
+    choices: FORM_TYPES.map((t) => ({
+      name: t.name,
+      message: `${FG.secondary}${t.name}${FG.reset}  ${FG.muted}${t.message}${FG.reset}`,
+      indicator: {
+        selected: `${FG.success}●${FG.reset}`,
+        unselected: `${FG.surface0}○${FG.reset}`,
+      },
+    })),
+    initial: 0,
+    pointer: `${FG.highlight}▶${FG.reset}`,
+  });
+  const type = await typePrompt.run();
+
   const frameworkPrompt = new Select({
     name: "framework",
     message: `${FG.info}select framework${FG.reset}:`,
@@ -101,9 +128,6 @@ async function runInteractive(): Promise<Record<string, any>> {
     })),
     initial: 0,
     pointer: `${FG.highlight}▶${FG.reset}`,
-    style: {
-      border: (text: string) => text,
-    },
   });
   const framework = await frameworkPrompt.run();
 
@@ -180,7 +204,7 @@ async function runInteractive(): Promise<Record<string, any>> {
     process.exit(0);
   }
 
-  return { name, framework, ui, orm, captcha, outputDir };
+  return { name, type, framework, ui, orm, captcha, outputDir };
 }
 
 async function main() {
@@ -203,6 +227,7 @@ ${FG.muted}commands:${FG.reset}
 
 ${FG.muted}generate options:${FG.reset}
   ${FG.warning}-f${FG.reset}, ${FG.warning}--framework${FG.reset}  ${FG.muted}<nextjs|svelte|react|astro|solidjs>${FG.reset}
+  ${FG.warning}-t${FG.reset}, ${FG.warning}--type${FG.reset}      ${FG.muted}<contact|signup|application|newsletter|survey>${FG.reset}
   ${FG.warning}-u${FG.reset}, ${FG.warning}--ui${FG.reset}        ${FG.muted}<shadcn|chakra|default>${FG.reset}
   ${FG.warning}-o${FG.reset}, ${FG.warning}--orm${FG.reset}        ${FG.muted}<prisma|drizzle|postgres|supabase|neon|turso>${FG.reset}
   ${FG.warning}-c${FG.reset}, ${FG.warning}--captcha${FG.reset}  ${FG.muted}enable turnstile captcha${FG.reset}

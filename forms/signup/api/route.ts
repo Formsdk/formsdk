@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const result = await handleRequest({
-    config: require("@/lib/forms")[window.__FORM_NAME__],
+    config: require("@/lib/forms").contactForm,
     body,
     ctx: { ip: req.headers.get("x-forwarded-for") }
   });

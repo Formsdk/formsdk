@@ -1,6 +1,6 @@
 import { test, expect, beforeEach, afterEach } from "bun:test";
-import { createForm, handleRequest, setEnv, clearEnv } from "./src/index";
-import type { FormConfig } from "./src/types";
+import { createForm, handleRequest, setEnv, clearEnv } from "./packages/core/dist/index.js";
+import type { FormConfig } from "./packages/core/dist/types/index.d.ts";
 
 let originalEnv: NodeJS.ProcessEnv;
 

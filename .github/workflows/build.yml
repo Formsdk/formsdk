@@ -20,8 +20,8 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Build packages
+        run: npm run build
+
       - name: Run tests
         run: bun test
-
-      - name: Build
-        run: bun build ./src/index.ts --outdir=dist --format=esm --target=bun --external @supabase/supabase-js --external @neondatabase/serverless --external ws --external @libsql/client --external @prisma/client --external drizzle-orm --external postgres --external enquirer --external better-auth

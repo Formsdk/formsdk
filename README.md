@@ -2,6 +2,32 @@
 
 Framework-agnostic form state management with server-side validation.
 
+## Why FormSDK?
+
+**Stop rewriting form boilerplate.**
+
+Every project needs forms. Every project writes the same thing:
+- Loading states
+- Error handling
+- Validation
+- Request cancellation
+- Reset logic
+
+FormSDK gives you a consistent API across frameworks without locking you into a specific database or hosting provider.
+
+**vs. Writing your own:**
+- No need to handle `navigator.sendBeacon` for keepalive
+- Automatic request deduplication (no double-submit)
+- Unified error format across your entire app
+- Captcha support built-in (Turnstile)
+- Fewer lines of code to maintain
+
+**vs. Other form libraries:**
+- No component library - brings your own UI
+- Works with any database via adapters
+- Framework-agnostic (React, Svelte, Astro, Solid)
+- Tiny bundle (~3KB for useForm hook)
+
 ## Features
 
 **Client-Side**

@@ -1,9 +1,8 @@
-import { createForm, registerDBAdapter } from "formsdk";
-import { createSupabaseAdapter } from "formsdk/adapters/supabase";
+import { createForm, registerDBAdapter, createSupabaseAdapter } from "@formsdk/sdk";
 
 registerDBAdapter("supabase", createSupabaseAdapter({
   url: import.meta.env.PUBLIC_SUPABASE_URL!,
-  anonKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY!
+  apiKey: import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 }));
 
 export const applicationForm = createForm({

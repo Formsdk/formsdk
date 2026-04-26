@@ -1,47 +1,20 @@
 {
   "name": "@formsdk/sdk",
-  "version": "1.0.6",
-  "description": "Zero-lock-in, framework-agnostic Form SDK with pluggable adapters",
+  "version": "1.0.1",
+  "description": "Zero-lock-in, framework-agnostic Form SDK - useForm hook + handleRequest for any framework",
+  "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./react": {
-      "import": "./dist/react.js",
-      "types": "./dist/react.d.ts"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "form",
-    "sdk",
-    "formsdk",
-    "validation",
-    "captcha",
-    "database",
-    "adapter",
-    "nextjs",
-    "svelte",
-    "astro",
-    "react",
-    "solidjs"
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "test": "bun test",
-    "build": "bun build ./src/index.ts ./src/react.ts --outdir=dist --format=esm --target=node --packages=external && tsc -p tsconfig.build.json",
-    "pub": "bun run build && npm publish --access public",
+    "build": "npm run build -w @formsdk/core && npm run build -w @formsdk/react && npm run build -w @formsdk/svelte && npm run build -w @formsdk/astro",
+    "pub": "npm run build && npm publish --workspaces --access public",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/react": "^18.2.0",
     "enquirer": "^2.4.1",
     "typescript": "^5.0.0"
   },

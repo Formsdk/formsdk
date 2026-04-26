@@ -1,0 +1,47 @@
+{
+  "name": "@formsdk/react",
+  "version": "1.0.2",
+  "description": "React hooks for FormSDK",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "form",
+    "react",
+    "formsdk",
+    "useform"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir=dist --format=esm --target=node --external react --external react-dom --external @formsdk/core",
+    "pub": "bun run build && npm publish --access public"
+  },
+  "dependencies": {
+    "@formsdk/core": "1.0.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "arjunaditya",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/formsdk/formsdk"
+  }
+}

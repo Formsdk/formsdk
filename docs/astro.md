@@ -3,141 +3,94 @@
 ## Install
 
 ```bash
-bun add @formsdk/sdk
+npm install @formsdk/sdk
 ```
 
-## CLI
+## Two APIs
 
-@formsdk/sdk provides an interactive CLI to generate forms:
+| API | Purpose | Where |
+|-----|---------|-------|
+| `useForm` | Client-side form state management | Astro components/scripts |
+| `handleRequest` | Server-side validation & DB persistence | API routes |
 
-```bash
-bun x @formsdk/sdk generate           # Interactive mode
-bun x @formsdk/sdk generate contact   # With options
+---
+
+## Client-Side Form (Script Tag)
+
+```astro
+---
+// src/pages/contact.astro
+---
+
+<form id="contact-form">
+  <input name="name" type="text" placeholder="Name" />
+  <input name="email" type="email" placeholder="Email" />
+  <textarea name="message" placeholder="Message"></textarea>
+  <button type="submit">Send</button>
+</form>
+
+<script>
+  import { useForm } from "@formsdk/sdk";
+
+  const { register, handleSubmit, formState } = useForm({
+    action: "/api/contact",
+    onSuccess: () => alert("Message sent!"),
+  });
+
+  const form = document.getElementById("contact-form") as HTMLFormElement;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const values = Object.fromEntries(data);
+    await handleSubmit({ preventDefault: () => {}, currentTarget: form } as SubmitEvent);
+  });
+</script>
 ```
 
-### CLI Options
+### Simpler Approach (Vanilla Fetch)
 
-```
---framework <nextjs|svelte|react|astro|solidjs>  Framework (default: astro)
---ui <shadcn|chakra|default>                      UI library (default: default)
---orm <prisma|drizzle|postgres|supabase|neon|turso>  ORM/database (default: postgres)
---captcha                                         Enable Turnstile captcha
---output-dir <dir>                                Output directory (default: ./forms)
-```
+```astro
+---
+// src/pages/contact.astro
+---
 
-### Examples
+<form id="contact-form">
+  <input name="name" type="text" required />
+  <input name="email" type="email" required />
+  <textarea name="message" required></textarea>
+  <button type="submit">Send</button>
+</form>
 
-```bash
-bun x @formsdk/sdk generate contact --framework astro --ui shadcn --orm supabase
-bun x @formsdk/sdk generate contact --framework astro --orm neon --captcha
-```
+<script>
+  const form = document.getElementById("contact-form");
 
-## Setup
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    const body = JSON.stringify(Object.fromEntries(data));
 
-### Database Adapters
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
 
-@formsdk/sdk supports multiple database adapters for persisting form submissions.
-
-**Prisma ORM:**
-```ts
-import { createPrismaAdapter } from "@formsdk/sdk/adapters/orm/prisma";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-registerDBAdapter("prisma", createPrismaAdapter({
-  client: prisma,
-  modelName: "formSubmission"
-}));
-```
-
-**Drizzle ORM:**
-```ts
-import { createDrizzleAdapter } from "@formsdk/sdk/adapters/orm/drizzle";
-import { drizzle } from "drizzle-orm/postgres-js";
-
-const db = drizzle(import.meta.env.DATABASE_URL!);
-registerDBAdapter("drizzle", createDrizzleAdapter({ db, table: formSubmissions }));
+    const result = await res.json();
+    if (result.success) {
+      (form as HTMLFormElement).reset();
+      alert("Sent!");
+    }
+  });
+</script>
 ```
 
-**Supabase:**
-```ts
-import { createSupabaseAdapter } from "@formsdk/sdk/adapters/supabase";
+---
 
-registerDBAdapter("supabase", createSupabaseAdapter({
-  url: import.meta.env.PUBLIC_SUPABASE_URL!,
-  anonKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY!
-}));
-```
-
-**Neon (Serverless Postgres):**
-```ts
-import { createNeonAdapter } from "@formsdk/sdk/adapters/neon";
-
-registerDBAdapter("neon", createNeonAdapter({
-  connectionString: import.meta.env.DATABASE_URL!
-}));
-```
-
-**Turso (libSQL):**
-```ts
-import { createTursoAdapter } from "@formsdk/sdk/adapters/turso";
-
-registerDBAdapter("turso", createTursoAdapter({
-  url: import.meta.env.TURSO_DATABASE_URL!,
-  authToken: import.meta.env.TURSO_AUTH_TOKEN
-}));
-```
-
-**Generic PostgreSQL:**
-```ts
-import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
-
-registerDBAdapter("postgres", createPostgresAdapter({
-  connectionString: import.meta.env.DATABASE_URL!
-}));
-```
-
-### Long-Linking Methods
-
-**Neon:**
-```env
-DATABASE_URL=postgres://user:password@ep-xxx.region.aws.neon.tech/neondb?sslmode=require
-```
-
-**Supabase:**
-```env
-DATABASE_URL=postgres://postgres.xxx@aws-0.region.supabase.co:5432/postgres
-```
-
-**Turso:**
-```env
-TURSO_DATABASE_URL=libsql://your-db.turso.io?authToken=your-token
-```
-
-## Create Form
-
-```ts
-// src/lib/forms.ts
-import { createForm } from "@formsdk/sdk";
-
-export const contactForm = createForm({
-  fields: {
-    email: (v) => typeof v === "string" && v.includes("@"),
-    message: (v) => typeof v === "string" && v.length > 10
-  },
-  captcha: "turnstile",
-  db: "postgres",
-  onSubmit: async (data, ctx) => {
-    console.log("submitted", data);
-  }
-});
-```
-
-## API Endpoint
+## API Route
 
 ```ts
 // src/pages/api/contact.ts
-import { contactForm } from "$lib/forms";
 import { handleRequest } from "@formsdk/sdk";
 import type { APIRoute } from "astro";
 
@@ -145,118 +98,124 @@ export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
 
   const result = await handleRequest({
-    config: contactForm,
+    config: {
+      fields: {
+        name: (v) => typeof v === "string" && v.length >= 2,
+        email: (v) => typeof v === "string" && v.includes("@"),
+        message: (v) => typeof v === "string" && v.length >= 10,
+      },
+    },
     body,
-    ctx: { ip: request.headers.get("x-forwarded-for") || undefined }
+    ctx: { ip: request.headers.get("x-forwarded-for") },
   });
 
   return new Response(JSON.stringify(result), {
     status: result.success ? 200 : 400,
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json" },
   });
 };
 ```
 
-## Environment Variables
+---
 
-In `.env`:
+## Database Adapters
 
-```env
-DATABASE_URL=postgres://user:password@host:port/database
-TURNSTILE_SECRET=your_secret_key
-PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-TURSO_DATABASE_URL=libsql://your-db.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
-```
-
-### Setting Environment Variables
-
-In your @formsdk/sdk config file (`src/lib/formsdk.ts`):
+### Drizzle ORM
 
 ```ts
-import { createForm, handleRequest, setEnv } from "@formsdk/sdk";
+import { registerDBAdapter, createDrizzleAdapter } from "@formsdk/sdk";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { formSubmissions } from "./db/schema";
 
-setEnv({
-  TURNSTILE_SECRET: import.meta.env.TURNSTILE_SECRET
+const db = drizzle(import.meta.env.DATABASE_URL!);
+
+registerDBAdapter("drizzle", createDrizzleAdapter({
+  db,
+  table: formSubmissions
+}));
+```
+
+### Supabase
+
+```ts
+import { registerDBAdapter, createSupabaseAdapter } from "@formsdk/sdk";
+
+registerDBAdapter("supabase", createSupabaseAdapter({
+  url: import.meta.env.PUBLIC_SUPABASE_URL!,
+  apiKey: import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+}));
+```
+
+### Neon
+
+```ts
+import { registerDBAdapter, createNeonAdapter } from "@formsdk/sdk";
+
+registerDBAdapter("neon", createNeonAdapter({
+  connectionString: import.meta.env.DATABASE_URL!
+}));
+```
+
+### PostgreSQL
+
+```ts
+import { registerDBAdapter, createPostgresAdapter } from "@formsdk/sdk";
+
+registerDBAdapter("postgres", createPostgresAdapter({
+  connectionString: import.meta.env.DATABASE_URL!
+}));
+```
+
+---
+
+## Form Config with DB
+
+```ts
+// src/lib/forms.ts
+import { createForm } from "@formsdk/sdk";
+
+export const contactForm = createForm({
+  fields: {
+    name: (v) => typeof v === "string" && v.length >= 2,
+    email: (v) => typeof v === "string" && v.includes("@"),
+    message: (v) => typeof v === "string" && v.length >= 10,
+  },
+  db: "drizzle",
+  onSubmit: async (data) => {
+    console.log("Form submitted:", data);
+  },
 });
 ```
 
-### Security Notes
-
-- Never commit `.env` files containing secrets to version control
-- Use `.env.example` for required environment variables without actual values
-- In production, set environment variables through your deployment platform (Netlify, Vercel, etc.)
-
-## HTML Form Component
-
-```astro
 ---
-// src/pages/contact.astro
----
-<form id="contact-form" class="max-w-md mx-auto p-4">
-  <div class="mb-4">
-    <label for="email" class="block text-sm font-medium mb-1">Email</label>
-    <input type="email" name="email" id="email" required
-      class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-  </div>
-  <div class="mb-4">
-    <label for="message" class="block text-sm font-medium mb-1">Message</label>
-    <textarea name="message" id="message" required
-      class="w-full px-3 py-2 border border-gray-300 rounded-md min-h-[100px]"></textarea>
-  </div>
-  <div class="cf-turnstile" data-sitekey="your_site_key"></div>
-  <button type="submit" class="w-full bg-primary text-white py-2 rounded-md hover:bg-primary/90">
-    Send
-  </button>
-</form>
 
-<script>
-  const form = document.getElementById("contact-form");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const data = new FormData(form as HTMLFormElement);
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      body: JSON.stringify(Object.fromEntries(data))
-    });
-    const result = await res.json();
-    if (result.success) {
-      alert("Sent!");
-    } else {
-      console.error(result.errors);
-    }
-  });
-</script>
+## Backend Response Format
+
+FormSDK expects:
+
+### Success
+
+```json
+{ "success": true, "message": "Form submitted" }
 ```
 
-## With Astro Actions (Experimental)
+### Validation Errors
 
-```ts
-// src/actions.ts
-import { contactForm } from "$lib/forms";
-import { handleRequest } from "@formsdk/sdk";
-
-export const contactAction = async ({ request }: { request: Request }) => {
-  const data = await request.formData();
-  const body = Object.fromEntries(data);
-
-  return handleRequest({
-    config: contactForm,
-    body,
-    ctx: { ip: request.headers.get("x-forwarded-for") || undefined }
-  });
-};
+```json
+{
+  "success": false,
+  "errors": [
+    { "field": "email", "message": "Invalid email" }
+  ]
+}
 ```
 
-```astro
 ---
-// src/pages/contact.astro
-import { contactAction } from "@/actions";
----
-<form action={contactAction} method="post">
-  <input type="email" name="email" required />
-  <textarea name="message" required></textarea>
-  <button type="submit">Send</button>
-</form>
+
+## Environment Variables
+
+```env
+DATABASE_URL=postgres://user:password@host:port/database
+PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```

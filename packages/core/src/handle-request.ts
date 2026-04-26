@@ -1,4 +1,4 @@
-import { FormConfig, FormContext, FieldError, FormResult } from "./types.ts";
+import type { FormConfig, FieldError, FormResult, FormContext } from "./types.ts";
 import { getDBAdapter } from "./adapters/db.ts";
 
 interface EnvConfig {
@@ -20,9 +20,14 @@ export function getEnv(key: keyof EnvConfig): string | undefined {
 }
 
 interface HandleRequestOptions {
-  config: FormConfig;
-  body: Record<string, any>;
-  ctx: FormContext;
+  config: {
+    fields: Record<string, (value: unknown) => boolean>;
+    captcha?: "turnstile";
+    db?: string;
+    onSubmit?: (body: Record<string, unknown>, ctx?: FormContext) => Promise<void>;
+  };
+  body: Record<string, unknown>;
+  ctx?: FormContext;
 }
 
 export async function handleRequest(
@@ -42,7 +47,7 @@ export async function handleRequest(
   }
 
   if (config.captcha === "turnstile") {
-    const token = ctx.headers?.["x-turnstile-token"];
+    const token = ctx?.headers?.["x-turnstile-token"];
     if (!token) {
       return { success: false, errors: [{ field: "captcha", message: "Captcha token required" }] };
     }
@@ -54,7 +59,7 @@ export async function handleRequest(
 
     const { createTurnstileAdapter } = await import("./adapters/turnstile.ts");
     const adapter = createTurnstileAdapter({ secretKey });
-    const valid = await adapter.verify(token, ctx.ip);
+    const valid = await adapter.verify(token, ctx?.ip);
     if (!valid) {
       return { success: false, errors: [{ field: "captcha", message: "Captcha verification failed" }] };
     }
@@ -75,7 +80,7 @@ export async function handleRequest(
   return { success: true, message: "Form submitted successfully" };
 }
 
-export function createForm(config: FormConfig): FormConfig {
+export function createForm<T extends Record<string, unknown>>(config: FormConfig<T>): FormConfig<T> {
   return config;
 }
 

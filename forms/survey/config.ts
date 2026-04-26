@@ -1,5 +1,4 @@
-import { createForm, registerDBAdapter } from "formsdk";
-import { createNeonAdapter } from "formsdk/adapters/neon";
+import { createForm, registerDBAdapter, createNeonAdapter } from "@formsdk/sdk";
 
 registerDBAdapter("neon", createNeonAdapter({ connectionString: import.meta.env.DATABASE_URL! }));
 

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
@@ -16,6 +16,6 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src"],
-  "exclude": ["src/cli"]
+  "include": ["src/react", "src/core", "src/adapters"],
+  "exclude": ["src/cli", "src/solid", "src/sveltekit", "src/astro", "src/tanstack", "src/solid.ts", "src/sveltekit.ts", "src/astro.ts", "src/tanstack.ts"]
 }

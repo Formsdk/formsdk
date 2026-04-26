@@ -3,44 +3,137 @@
 ## Install
 
 ```bash
-bun add @formsdk/sdk
+npm install @formsdk/sdk
 ```
 
-## CLI
+## Two APIs
 
-@formsdk/sdk provides an interactive CLI to generate forms:
+| API | Purpose | Where |
+|-----|---------|-------|
+| `useForm` | Client-side form state management | React components |
+| `handleRequest` | Server-side validation & DB persistence | API routes |
 
-```bash
-bun x @formsdk/sdk generate           # Interactive mode (arrow keys + space)
-bun x @formsdk/sdk generate contact   # With options
+---
+
+## useForm Hook (Recommended)
+
+```tsx
+// app/contact/page.tsx
+"use client";
+
+import { useForm } from "@formsdk/sdk";
+
+export default function ContactPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, status, isSubmitting },
+    reset,
+  } = useForm({
+    action: "/api/contact",
+    onSuccess: () => {
+      alert("Message sent!");
+      reset();
+    },
+  });
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input {...register("name")} placeholder="Name" />
+        {errors.name && <span className="error">{errors.name}</span>}
+      </div>
+
+      <div>
+        <input {...register("email")} type="email" placeholder="Email" />
+        {errors.email && <span className="error">{errors.email}</span>}
+      </div>
+
+      <div>
+        <textarea {...register("message")} placeholder="Message" />
+        {errors.message && <span className="error">{errors.message}</span>}
+      </div>
+
+      <button type="submit" disabled={isSubmitting}>
+        {status === "loading" ? "Sending..." : "Send"}
+      </button>
+    </form>
+  );
+}
 ```
 
-### CLI Options
+### useForm Options
 
-```
---framework <nextjs|svelte|react>  Framework (default: nextjs)
---ui <shadcn|chakra|default>        UI library (default: default)
---orm <prisma|drizzle|postgres|supabase|neon|turso>  ORM/database (default: postgres)
---captcha                           Enable Turnstile captcha
---output-dir <dir>                   Output directory (default: ./forms)
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `action` | `string` | *required* | Endpoint URL |
+| `method` | `"POST" \| "PUT"` | `"POST"` | HTTP method |
+| `initialValues` | `object` | `{}` | Initial values |
+| `onSuccess` | `function` | - | Success callback |
+| `onError` | `function` | - | Error callback |
+
+### useForm Return Value
+
+| Property | Description |
+|----------|-------------|
+| `register(name)` | Returns `{ name, value, onChange, onBlur }` for controlled inputs |
+| `handleSubmit` | Submit handler (also accepts `SubmitEvent`) |
+| `setError(name, msg)` | Manually set field error |
+| `clearErrors(name?)` | Clear field(s) or all errors |
+| `reset(values?)` | Reset form |
+| `formState` | `{ status, errors, touched, dirty, isSubmitting }` |
+| `values` | Current form values |
+
+---
+
+## API Route (handleRequest)
+
+```ts
+// app/api/contact/route.ts
+import { handleRequest } from "@formsdk/sdk";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const result = await handleRequest({
+    config: {
+      fields: {
+        name: (v) => typeof v === "string" && v.length >= 2,
+        email: (v) => typeof v === "string" && v.includes("@"),
+        message: (v) => typeof v === "string" && v.length >= 10,
+      },
+    },
+    body: await req.json(),
+    ctx: { ip: req.headers.get("x-forwarded-for") },
+  });
+
+  return Response.json(result, { status: result.success ? 200 : 400 });
+}
 ```
 
-### Examples
-
-```bash
-bun x @formsdk/sdk generate contact --framework nextjs --ui shadcn --orm prisma --captcha
-bun x @formsdk/sdk generate contact --framework svelte --ui shadcn --orm supabase
-bun x @formsdk/sdk generate contact              # Interactive mode
-```
+---
 
 ## Database Adapters
 
-@formsdk/sdk supports multiple database adapters for persisting form submissions.
-
-### Prisma ORM
+### Drizzle ORM
 
 ```ts
-import { createPrismaAdapter } from "@formsdk/sdk/adapters/orm/prisma";
+// lib/formsdk.ts
+import { registerDBAdapter, createDrizzleAdapter } from "@formsdk/sdk";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { formSubmissions } from "./db/schema";
+
+const db = drizzle(process.env.DATABASE_URL!);
+
+registerDBAdapter("drizzle", createDrizzleAdapter({
+  db,
+  table: formSubmissions
+}));
+```
+
+### Prisma
+
+```ts
+import { registerDBAdapter, createPrismaAdapter } from "@formsdk/sdk";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -51,12 +144,47 @@ registerDBAdapter("prisma", createPrismaAdapter({
 }));
 ```
 
-### Drizzle ORM
+### Supabase
 
 ```ts
-import { createDrizzleAdapter } from "@formsdk/sdk/adapters/orm/drizzle";
+import { registerDBAdapter, createSupabaseAdapter } from "@formsdk/sdk";
+
+registerDBAdapter("supabase", createSupabaseAdapter({
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  apiKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+}));
+```
+
+### Neon (PostgreSQL Serverless)
+
+```ts
+import { registerDBAdapter, createNeonAdapter } from "@formsdk/sdk";
+
+registerDBAdapter("neon", createNeonAdapter({
+  connectionString: process.env.DATABASE_URL!
+}));
+```
+
+### PostgreSQL (Generic)
+
+```ts
+import { registerDBAdapter, createPostgresAdapter } from "@formsdk/sdk";
+
+registerDBAdapter("postgres", createPostgresAdapter({
+  connectionString: process.env.DATABASE_URL!
+}));
+```
+
+---
+
+## Full Example with Database
+
+### 1. Setup (lib/formsdk.ts)
+
+```ts
+import { registerDBAdapter, createDrizzleAdapter } from "@formsdk/sdk";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { formSubmissions } from "./schema";
+import { formSubmissions } from "./db/schema";
 
 const db = drizzle(process.env.DATABASE_URL!);
 
@@ -66,219 +194,125 @@ registerDBAdapter("drizzle", createDrizzleAdapter({
 }));
 ```
 
-### Supabase
+### 2. Form Config (lib/forms.ts)
 
 ```ts
-import { createSupabaseAdapter } from "@formsdk/sdk/adapters/supabase";
-
-registerDBAdapter("supabase", createSupabaseAdapter({
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  table: "contacts"
-}));
-```
-
-### Neon (PostgreSQL Serverless)
-
-```ts
-import { createNeonAdapter } from "@formsdk/sdk/adapters/neon";
-
-registerDBAdapter("neon", createNeonAdapter({
-  connectionString: process.env.DATABASE_URL!,
-  table: "contacts"
-}));
-```
-
-### Turso (libSQL)
-
-```ts
-import { createTursoAdapter } from "@formsdk/sdk/adapters/turso";
-
-registerDBAdapter("turso", createTursoAdapter({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN,
-  table: "contacts"
-}));
-```
-
-### Generic PostgreSQL (Any remote Postgres)
-
-```ts
-import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
-
-registerDBAdapter("postgres", createPostgresAdapter({
-  connectionString: process.env.DATABASE_URL!,
-  table: "contacts"
-}));
-```
-
-### Long-Linking Methods
-
-Each adapter supports long-linking connections via environment variables:
-
-**Prisma (schema.prisma):**
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-```
-
-**Neon:**
-```env
-DATABASE_URL=postgres://user:password@ep-xxx.region.aws.neon.tech/neondb?sslmode=require
-```
-
-**Supabase:**
-```env
-DATABASE_URL=postgres://postgres.xxx@aws-0.region.supabase.co:5432/postgres
-```
-
-**Turso:**
-```env
-TURSO_DATABASE_URL=libsql://your-db.turso.io?authToken=your-token
-```
-
-## Create Form
-
-```ts
-// lib/forms.ts
 import { createForm } from "./formsdk";
 
 export const contactForm = createForm({
   fields: {
+    name: (v) => typeof v === "string" && v.length >= 2,
     email: (v) => typeof v === "string" && v.includes("@"),
-    message: (v) => typeof v === "string" && v.length > 10
+    message: (v) => typeof v === "string" && v.length >= 10,
   },
-  captcha: "turnstile",
-  db: "postgres",
-  onSubmit: async (data, ctx) => {
-    console.log("submitted", data);
-  }
+  db: "drizzle",
+  onSubmit: async (data) => {
+    console.log("Form submitted:", data);
+  },
 });
 ```
 
-## API Route
+### 3. API Route (app/api/contact/route.ts)
 
 ```ts
-// app/api/contact/route.ts
 import { contactForm } from "@/lib/forms";
-import { handleRequest } from "@/lib/formsdk";
+import { handleRequest } from "@formsdk/sdk";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-
   const result = await handleRequest({
     config: contactForm,
     body,
-    ctx: { ip: req.headers.get("x-forwarded-for") || undefined }
+    ctx: { ip: req.headers.get("x-forwarded-for") },
   });
 
   return Response.json(result, { status: result.success ? 200 : 400 });
 }
 ```
 
+### 4. Client Component
+
+```tsx
+"use client";
+
+import { useForm } from "@formsdk/sdk";
+
+export default function ContactPage() {
+  const { register, handleSubmit, formState: { errors, status } } = useForm({
+    action: "/api/contact",
+    onSuccess: () => alert("Sent!"),
+  });
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input {...register("name")} placeholder="Name" />
+      {errors.name && <span>{errors.name}</span>}
+
+      <input {...register("email")} type="email" placeholder="Email" />
+      {errors.email && <span>{errors.email}</span>}
+
+      <textarea {...register("message")} placeholder="Message" />
+      {errors.message && <span>{errors.message}</span>}
+
+      <button type="submit" disabled={status === "loading"}>Send</button>
+    </form>
+  );
+}
+```
+
+---
+
+## Backend Response Format
+
+FormSDK expects your server to return:
+
+### Success
+
+```json
+{
+  "success": true,
+  "message": "Form submitted successfully"
+}
+```
+
+### Validation Errors
+
+```json
+{
+  "success": false,
+  "errors": [
+    { "field": "email", "message": "Invalid email format" }
+  ]
+}
+```
+
+---
+
 ## Environment Variables
 
 ```env
 DATABASE_URL=postgres://user:password@host:port/database
-TURNSTILE_SECRET=your_secret_key
+TURNSTILE_SECRET=your_cloudflare_secret
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-TURSO_DATABASE_URL=libsql://your-db.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
-### Setting Environment Variables
+---
 
-In your @formsdk/sdk config file (`lib/formsdk.ts`), you can set the environment variables using `setEnv()`:
+## TypeScript Support
 
-```ts
-import { createForm, handleRequest, setEnv } from "@formsdk/sdk";
+```tsx
+interface ContactFormData {
+  name: string;
+  email: string;
+  message: string;
+}
 
-setEnv({
-  TURNSTILE_SECRET: process.env.TURNSTILE_SECRET
+const { register, handleSubmit, values } = useForm<ContactFormData>({
+  action: "/api/contact",
 });
-```
 
-**Important:** The environment variable name in your `.env` file and the key in `setEnv()` must match exactly. Next.js automatically makes variables from `.env` files available via `process.env`.
-
-### Security Notes
-
-- Never commit `.env` files containing secrets to version control
-- Use `.env.example` for required environment variables without actual values
-- In production, set environment variables through your deployment platform (Vercel, Railway, etc.)
-
-## Client Component
-
-```tsx
-// app/contact/page.tsx
-"use client";
-
-export default function ContactPage() {
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const data = new FormData(form);
-
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      body: JSON.stringify(Object.fromEntries(data)),
-      headers: { "Content-Type": "application/json" }
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      alert("Sent!");
-    } else {
-      console.error(result.errors);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input type="email" name="email" required />
-      <textarea name="message" required />
-      <div className="cf-turnstile" data-sitekey="your_site_key" />
-      <button type="submit">Send</button>
-    </form>
-  );
-}
-```
-
-## With React Server Actions (Next.js 14+)
-
-```ts
-// app/actions.ts
-"use server";
-
-import { contactForm } from "@/lib/forms";
-import { handleRequest } from "@/lib/formsdk";
-
-export async function submitContact(formData: FormData) {
-  const body = Object.fromEntries(formData);
-
-  return handleRequest({
-    config: contactForm,
-    body,
-    ctx: {}
-  });
-}
-```
-
-```tsx
-// app/contact/page.tsx
-import { submitContact } from "@/app/actions";
-
-export default function ContactPage() {
-  return (
-    <form action={submitContact}>
-      <input type="email" name="email" required />
-      <textarea name="message" required />
-      <div className="cf-turnstile" data-sitekey="your_site_key" />
-      <button type="submit">Send</button>
-    </form>
-  );
-}
+// values is typed as ContactFormData
+console.log(values.name);
 ```

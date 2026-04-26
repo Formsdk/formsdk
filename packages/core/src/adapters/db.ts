@@ -1,11 +1,4 @@
-export interface DBAdapter {
-  save(formId: string, data: Record<string, any>, ctx: FormContext): Promise<void>;
-}
-
-export interface FormContext {
-  ip?: string;
-  headers?: Record<string, string>;
-}
+import type { DBAdapter, FormContext } from "../types.ts";
 
 const dbAdapters: Record<string, DBAdapter> = {};
 

@@ -1,25 +1,203 @@
 # @formsdk/sdk
 
-Zero-lock-in, framework-agnostic Form SDK.
+Zero-lock-in, framework-agnostic Form SDK with two complementary APIs for complete form handling.
+
+## Two APIs
+
+| API | Purpose | Where |
+|-----|---------|-------|
+| `useForm` | Client-side form state management | In your React components |
+| `handleRequest` | Server-side validation & DB persistence | In your API routes |
+
+---
 
 ## Quick Start
 
-```ts
-// lib/formsdk.ts
-import { createForm, handleRequest, setEnv, registerDBAdapter } from "@formsdk/sdk";
-import { createPostgresAdapter } from "@formsdk/sdk/adapters/postgres";
+### 1. Install
 
-setEnv({
-  TURNSTILE_SECRET: process.env.TURNSTILE_SECRET
-});
+```bash
+npm install @formsdk/sdk
+```
+
+### 2. Client Component
+
+```tsx
+// app/contact/page.tsx
+"use client";
+
+import { useForm } from "@formsdk/sdk";
+
+export default function ContactPage() {
+  const { register, handleSubmit, formState: { errors, status }, reset } = useForm({
+    action: "/api/contact",
+    onSuccess: () => {
+      alert("Message sent!");
+      reset();
+    },
+  });
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input {...register("name")} placeholder="Name" />
+      {errors.name && <span>{errors.name}</span>}
+
+      <input {...register("email")} type="email" placeholder="Email" />
+      {errors.email && <span>{errors.email}</span>}
+
+      <textarea {...register("message")} placeholder="Message" />
+      {errors.message && <span>{errors.message}</span>}
+
+      <button type="submit" disabled={status === "loading"}>
+        {status === "loading" ? "Sending..." : "Send"}
+      </button>
+    </form>
+  );
+}
+```
+
+### 3. API Route
+
+```ts
+// app/api/contact/route.ts
+import { handleRequest } from "@formsdk/sdk";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const result = await handleRequest({
+    config: {
+      fields: {
+        name: (v) => typeof v === "string" && v.length >= 2,
+        email: (v) => typeof v === "string" && v.includes("@"),
+        message: (v) => typeof v === "string" && v.length >= 10,
+      },
+    },
+    body: await req.json(),
+    ctx: { ip: req.headers.get("x-forwarded-for") },
+  });
+
+  return Response.json(result, { status: result.success ? 200 : 400 });
+}
+```
+
+---
+
+## useForm Hook API
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `action` | `string` | *required* | Endpoint URL |
+| `method` | `"POST" \| "PUT" \| "PATCH" \| "DELETE"` | `"POST"` | HTTP method |
+| `initialValues` | `Record<string, unknown>` | `{}` | Initial form values |
+| `onSuccess` | `(data: unknown) => void` | - | Success callback |
+| `onError` | `(error: unknown) => void` | - | Error callback |
+
+### Return Value
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `register(name)` | `(name: string) => RegisterReturn` | Register a field |
+| `handleSubmit(event?)` | `(e?: SubmitEvent) => Promise<void>` | Submit form |
+| `setError(name, message)` | `(name: string, message: string) => void` | Set field error |
+| `clearErrors(name?)` | `(name?: string) => void` | Clear errors |
+| `reset(values?)` | `(values?: Partial<T>) => void` | Reset form |
+| `formState` | `FormState` | Current form state |
+| `values` | `T` | Current form values |
+
+### register(name) Return
+
+```ts
+{
+  name: string;
+  value: unknown;
+  onChange: (event: InputEvent | { target: { value, name } }) => void;
+  onBlur: () => void;
+}
+```
+
+### formState
+
+```ts
+{
+  status: "idle" | "loading" | "success" | "error";
+  errors: Record<string, string>;
+  touched: Set<string>;
+  dirty: boolean;
+  isSubmitting: boolean;
+}
+```
+
+---
+
+## handleRequest API
+
+### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `config` | `FormConfig` | Form definition with fields validation |
+| `body` | `Record<string, any>` | Form submission data |
+| `ctx` | `FormContext` | Context (ip, headers) |
+
+### FormConfig
+
+```ts
+{
+  fields: Record<string, (value: any) => boolean>;  // Validation functions
+  captcha?: "turnstile";                            // Cloudflare Turnstile
+  db?: string;                                       // DB adapter name
+  onSubmit?: (data, ctx) => Promise<void>;           // After successful submission
+}
+```
+
+---
+
+## Database Adapters
+
+Register once, use anywhere:
+
+```ts
+import { registerDBAdapter, createPostgresAdapter } from "@formsdk/sdk";
 
 registerDBAdapter("postgres", createPostgresAdapter({
-  query: Bun.sql,
-  table: "contacts"
+  connectionString: process.env.DATABASE_URL!
 }));
-
-export { createForm, handleRequest };
 ```
+
+### Available Adapters
+
+| Adapter | Function | Package |
+|---------|----------|---------|
+| PostgreSQL | `createPostgresAdapter` | `postgres` |
+| Supabase | `createSupabaseAdapter` | `@supabase/supabase-js` |
+| Neon | `createNeonAdapter` | `@neondatabase/serverless` |
+| Turso | `createTursoAdapter` | `@libsql/client` |
+| Drizzle ORM | `createDrizzleAdapter` | `drizzle-orm` |
+| Prisma | `createPrismaAdapter` | `@prisma/client` |
+| Better Auth | `createBetterAuthAdapter` | `better-auth` |
+
+---
+
+## Next.js + Database Example
+
+### 1. Setup DB Adapter
+
+```ts
+// lib/formsdk.ts
+import { registerDBAdapter, createDrizzleAdapter } from "@formsdk/sdk";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { formSubmissions } from "./db/schema";
+
+const db = drizzle(process.env.DATABASE_URL!);
+
+registerDBAdapter("drizzle", createDrizzleAdapter({
+  db,
+  table: formSubmissions
+}));
+```
+
+### 2. Create Form Config
 
 ```ts
 // lib/forms.ts
@@ -27,91 +205,42 @@ import { createForm } from "./formsdk";
 
 export const contactForm = createForm({
   fields: {
+    name: (v) => typeof v === "string" && v.length >= 2,
     email: (v) => typeof v === "string" && v.includes("@"),
-    message: (v) => typeof v === "string" && v.length > 10
+    message: (v) => typeof v === "string" && v.length >= 10,
   },
-  captcha: "turnstile",
-  db: "postgres",
-  onSubmit: async (data, ctx) => {
-    console.log("saved", data);
-  }
-});
-```
-
-```ts
-// In your handler
-const result = await handleRequest({
-  config: contactForm,
-  body: { email: "test@example.com", message: "Hello world!" },
-  ctx: { ip: "1.2.3.4" }
-});
-```
-
-## Core API
-
-### `setEnv(config)`
-
-Configure environment variables programmatically (optional - also reads from `process.env`).
-
-```ts
-setEnv({
-  TURNSTILE_SECRET: "your_secret"
-});
-```
-
-### `registerDBAdapter(name, adapter)`
-
-Register a database adapter.
-
-```ts
-registerDBAdapter("postgres", createPostgresAdapter({ query: Bun.sql }));
-```
-
-### `createForm(config)`
-
-Creates a form definition.
-
-```ts
-const form = createForm({
-  fields: {
-    email: (v) => typeof v === "string" && v.includes("@"),
-    name: (v) => typeof v === "string" && v.length > 0
+  db: "drizzle",
+  onSubmit: async (data) => {
+    console.log("Form submitted:", data);
   },
-  captcha: "turnstile",
-  db: "postgres",
-  onSubmit: async (data, ctx) => { /* ... */ }
 });
 ```
 
-### `handleRequest(options)`
-
-Processes a form submission.
+### 3. API Route
 
 ```ts
-const result = await handleRequest({
-  config: form,
-  body: { email: "test@example.com" },
-  ctx: { ip: "1.2.3.4", headers: {} }
-});
+// app/api/contact/route.ts
+import { contactForm } from "@/lib/forms";
+import { handleRequest } from "@formsdk/sdk";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const result = await handleRequest({
+    config: contactForm,
+    body,
+    ctx: { ip: req.headers.get("x-forwarded-for") },
+  });
+
+  return Response.json(result, { status: result.success ? 200 : 400 });
+}
 ```
 
-Returns:
-```ts
-{ success: boolean; errors?: FieldError[]; message?: string }
-```
-
-## Adapters
-
-### Database Adapters
-
-- **postgres** - Uses `Bun.sql` for PostgreSQL
-
-### Captcha Adapters
-
-- **turnstile** - Cloudflare Turnstile (set via `TURNSTILE_SECRET` env var or `setEnv()`)
+---
 
 ## Framework Guides
 
+- [Next.js](./nextjs.md)
 - [SvelteKit](./sveltekit.md)
 - [Astro](./astro.md)
-- [Next.js](./nextjs.md)
+- [SolidJS](./solidjs.md)

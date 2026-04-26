@@ -1,5 +1,4 @@
-import { createForm, registerDBAdapter } from "formsdk";
-import { createPostgresAdapter } from "formsdk/adapters/postgres";
+import { createForm, registerDBAdapter, createPostgresAdapter } from "@formsdk/sdk";
 
 registerDBAdapter("postgres", createPostgresAdapter({ connectionString: process.env.DATABASE_URL! }));
 
